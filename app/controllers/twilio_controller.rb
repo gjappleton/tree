@@ -32,6 +32,8 @@ class TwilioController < ApplicationController
       end
     end
     render text: response.text
+    @call = Call.create_from_twilio(params)
+    @user = User.create_user(params)
   end
 
   # GET ivr/selection

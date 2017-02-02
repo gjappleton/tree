@@ -10,18 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170202182922) do
+ActiveRecord::Schema.define(version: 20170202213501) do
 
   create_table "calls", force: :cascade do |t|
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
     t.integer  "user_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.integer  "phone_number", limit: 8
+    t.index ["user_id"], name: "index_calls_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
-    t.integer  "phone_number"
-    t.datetime "created_at",   null: false
-    t.datetime "updated_at",   null: false
+    t.integer  "phone_number", limit: 8
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
   end
 
 end
