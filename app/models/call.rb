@@ -1,8 +1,8 @@
 class Call < ApplicationRecord
-  belongs_to :user
+  belongs_to :user, optional: true
 
   def self.create_from_twilio(params)
-    # from = User.find_by_phone_number(params["From"])
+    from = User.find_by_phone_number(params["From"])
     # if from.present?
     #   call =
     #   Call.create(
@@ -10,10 +10,17 @@ class Call < ApplicationRecord
     #   )
     # else
     #   call =
-
-    Call.create(
-      phone_number: params["From"]
-    )
-      # from_name = params["CallerName"] || params["From"]
+    if from.present?
+      Call.create(
+        phone_number: params["From"],
+        user_id: from.id
+      )
+      puts "hi"
+    else
+      Call.create(
+        phone_number: params["From"]
+      )
+      puts "hey"
+    end
   end
 end
