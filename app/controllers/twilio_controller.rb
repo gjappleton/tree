@@ -24,10 +24,20 @@ class TwilioController < ApplicationController
     render text: "Phone Tree."
   end
 
-  # POST ivr/welcome
-  def ivr_welcome
+  # POST welcome
+  def welcome
     response = Twilio::TwiML::Response.new do |r|
       r.Gather numDigits: '1', action: menu_path do |g|
+        # Thanks for calling All College Storage. If you require
+        # immediate assistance, we offer live chat support 24/7 on our website
+        # www.allcollegestorage.com. You can also text 'HELP' to 000 000 0000
+        # and one of our customer service specialists will assist you right away.
+        #
+        # If you're a new customer and would like more information about our
+        # moving, storage, and shipping services, press '1'.
+        #
+        # If you're an existing customer and require help, including technical
+        # assistance, press '2'.
         g.Play "http://howtodocs.s3.amazonaws.com/et-phone.mp3", loop: 3
       end
     end
@@ -36,16 +46,15 @@ class TwilioController < ApplicationController
     @user = User.create_user(params)
   end
 
-  # GET ivr/selection
+  # GET selection
   def menu_selection
     user_selection = params[:Digits]
 
     case user_selection
     when "1"
-      @output = "arise ye loyal sons of sigma phi, draw near our conclave's sacred shrine. breathe deep, and long, of incense sweet. till the pulse throbs with fire divine, divine, till the pulse throbs with fire divine. our virtues may we ever cherish. friendship love and truth undefiled. from honor stainless never beguiled. may the thrice illustrious ever flourish. long live the sigma phi. loud ring her battle cry. the sigma phi all hail her name, esto, perpetua."
-      twiml_say(@output, true)
+      new_customer
     when "2"
-      list_planets
+      current_customer
     else
       @output = "Returning to the main menu."
       twiml_say(@output)
@@ -53,39 +62,51 @@ class TwilioController < ApplicationController
 
   end
 
-  # POST/GET ivr/planets
-  # planets_path
-  def planet_selection
+  def new_customer
+    response = Twilio::TwiML::Response.new do |r|
+      r.Gather numDigits: '1', action: request_call_path do |g|
+      g.Say phrase, voice: 'alice', language: 'en-GB'
+        g.Say "Need an easy solution to deal with all your school stuff over the summer?
+        ACS has you covered. We'll pick your stuff up at your door, store it over the summer,
+        and deliver it back to your new location in the fall. Need shipping? No problem,
+        we ship anywhere internationally. All prices are per-item and include free packing
+        materials, pickup, storage, and delivery. Our most popular item is our ACS box, which measures
+        24 by 18 by 16 and costs $45 to store over the summer. If you need individual price quotes, please
+        visit our website and select your school for pricing information. Do you still
+        have unanswered questions? Please visit our website to live-chat with a customer services
+        representative, or press 1 to request a call back." loop: 3
+        r.Redirect welcome_path
+  end
+
+  def request_call
     user_selection = params[:Digits]
 
     case user_selection
-    when "2"
-      twiml_dial("+12024173378")
-    when "3"
-      twiml_dial("+12027336386")
-    when "4"
-      twiml_dial("+12027336637")
-    else
+    when "1"
+      SlackPosterWorker.perform_async("#customerservice", "#{params["CallerName"]} requesting callback")
+      @output = "We will call you back as soon as possible. To reach us in the quickest way,
+      text us at 000 000 0000 or go to www.allcollegestorage.com to live chat."
+      twiml_say(@output, true)
+    else # "0"
       @output = "Returning to the main menu."
       twiml_say(@output)
     end
   end
 
-  private
 
-  def list_planets
-    message = "To call the planet Broh doe As O G, press 2. To call the planet
-    DuhGo bah, press 3. To call an oober asteroid to your location, press 4. To
-    go back to the main menu, press the star key."
-
+  def current_customer
     response = Twilio::TwiML::Response.new do |r|
-      r.Gather numDigits: '1', action: planets_path do |g|
-        g.Say message, voice: 'alice', language: 'en-GB', loop:3
-      end
-    end
-
-    render text: response.text
+      r.Gather numDigits: '1', action: request_call_path do |g|
+      g.Say phrase, voice: 'alice', language: 'en-GB'
+        g.Say "Need immediate assistance? Text HELP to 000 000 0000
+        Or visit us at www.allcollegestorage.com and one of our customer service
+        specialist will assist you via live chat. If you prefer an agent give you
+        a call within the next 24 hours, please press 1 to leave a message for our
+        customer service team." loop: 3
+        r.Redirect welcome_path
   end
+
+  private
 
   def twiml_say(phrase, exit = false)
     # Respond with some TwiML and say something.
@@ -93,8 +114,7 @@ class TwilioController < ApplicationController
     response = Twilio::TwiML::Response.new do |r|
       r.Say phrase, voice: 'alice', language: 'en-GB'
       if exit
-        r.Say "Thank you for calling the ET Phone Home Service - the
-        adventurous alien's first choice in intergalactic travel."
+        r.Say "Thank you for calling All College Storage. Have an awesome day!"
         r.Hangup
       else
         r.Redirect welcome_path

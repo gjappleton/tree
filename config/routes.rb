@@ -4,12 +4,12 @@ Rails.application.routes.draw do
   root 'twilio#index'
 
   # webhook for your Twilio number
-  match 'ivr/welcome' => 'twilio#ivr_welcome', via: [:get, :post], as: 'welcome'
+  match 'welcome' => 'twilio#welcome', via: [:get, :post], as: 'welcome'
 
   # callback for user entry
-  match 'ivr/selection' => 'twilio#menu_selection', via: [:get, :post], as: 'menu'
+  match 'selection' => 'twilio#menu_selection', via: [:get, :post], as: 'menu'
 
   # callback for planet entry
-  match 'ivr/planets' => 'twilio#planet_selection', via: [:get, :post], as: 'planets'
+  match 'planets' => 'twilio#planet_selection', via: [:get, :post], as: 'planets'
 
 end
