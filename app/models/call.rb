@@ -15,12 +15,12 @@ class Call < ApplicationRecord
         phone_number: params["From"],
         user_id: from.id
       )
-      puts "hi"
+      puts "call created"
     else
       Call.create(
         phone_number: params["From"]
       )
-      puts "hey"
+      puts "call created"
     end
   end
 end
